@@ -1,0 +1,15 @@
+{
+  "name": "webdav-worker-proxy",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2026-04-16",
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./dist"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "APP_KV",
+      "id": "replace-in-cloudflare"
+    }
+  ]
+}
