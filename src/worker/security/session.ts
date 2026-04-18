@@ -4,6 +4,21 @@ interface SessionPayload {
   v: 1;
 }
 
+function isSessionPayload(value: unknown): value is SessionPayload {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const payload = value as Record<string, unknown>;
+  return (
+    payload.v === 1 &&
+    typeof payload.iat === "number" &&
+    Number.isFinite(payload.iat) &&
+    typeof payload.exp === "number" &&
+    Number.isFinite(payload.exp)
+  );
+}
+
 function encode(data: string): string {
   return btoa(data)
     .replaceAll("+", "-")
@@ -38,9 +53,29 @@ export async function verifySession(
   secret: string,
   now = Date.now(),
 ): Promise<boolean> {
-  const [body, proof] = token.split(".");
-  if (!body || !proof) return false;
-  const expected = await signBody(body, secret);
-  const payload = JSON.parse(decode(body)) as SessionPayload;
-  return expected === proof && payload.exp > now;
+  const parts = token.split(".");
+  if (parts.length !== 2) {
+    return false;
+  }
+
+  const [body, proof] = parts;
+  if (!body || !proof) {
+    return false;
+  }
+
+  try {
+    const expected = await signBody(body, secret);
+    if (expected !== proof) {
+      return false;
+    }
+
+    const payload = JSON.parse(decode(body)) as unknown;
+    if (!isSessionPayload(payload)) {
+      return false;
+    }
+
+    return payload.exp > now;
+  } catch {
+    return false;
+  }
 }
