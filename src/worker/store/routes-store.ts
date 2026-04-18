@@ -44,6 +44,20 @@ export function validateRouteInput(
   existing: ProxyRoute[],
   currentId?: string,
 ): void {
+  if (typeof input.prefix !== "string") throw new Error("prefix must be a string");
+  if (typeof input.stripPrefix !== "boolean") {
+    throw new Error("stripPrefix must be a boolean");
+  }
+  if (typeof input.targetBaseUrl !== "string") {
+    throw new Error("targetBaseUrl must be a string");
+  }
+  if (!Array.isArray(input.customHeaders)) {
+    throw new Error("customHeaders must be an array");
+  }
+  if (typeof input.enabled !== "boolean") {
+    throw new Error("enabled must be a boolean");
+  }
+
   if (!input.prefix.startsWith("/")) throw new Error("prefix must start with /");
   if (input.prefix !== "/" && input.prefix.endsWith("/")) {
     throw new Error("prefix must not end with /");
@@ -63,15 +77,25 @@ export function validateRouteInput(
   ) {
     throw new Error("prefix is reserved");
   }
+  let url: URL;
   try {
-    const url = new URL(input.targetBaseUrl);
-    if (url.protocol !== "http:" && url.protocol !== "https:") {
-      throw new Error("targetBaseUrl must be an http or https URL");
-    }
+    url = new URL(input.targetBaseUrl);
   } catch {
     throw new Error("targetBaseUrl must be an http or https URL");
   }
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new Error("targetBaseUrl must be an http or https URL");
+  }
+  if (url.search || url.hash) {
+    throw new Error("targetBaseUrl must not include query or hash");
+  }
   for (const header of input.customHeaders) {
+    if (typeof header !== "object" || header === null) {
+      throw new Error("customHeaders entries must be objects");
+    }
+    if (typeof header.name !== "string" || typeof header.value !== "string") {
+      throw new Error("customHeaders entries must have string name and value");
+    }
     const trimmedName = header.name.trim();
     if (!trimmedName) {
       throw new Error("header name is required");

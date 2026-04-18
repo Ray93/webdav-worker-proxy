@@ -60,6 +60,36 @@ describe("validateRouteInput", () => {
     ).toThrow("targetBaseUrl must be an http or https URL");
   });
 
+  it("rejects target URL with query", () => {
+    expect(() =>
+      validateRouteInput(
+        {
+          prefix: "/dav",
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com/base?x=1",
+          customHeaders: [],
+          enabled: true,
+        },
+        [],
+      ),
+    ).toThrow("targetBaseUrl must not include query or hash");
+  });
+
+  it("rejects target URL with fragment", () => {
+    expect(() =>
+      validateRouteInput(
+        {
+          prefix: "/dav",
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com/base#frag",
+          customHeaders: [],
+          enabled: true,
+        },
+        [],
+      ),
+    ).toThrow("targetBaseUrl must not include query or hash");
+  });
+
   it("rejects trailing slash prefixes except root", () => {
     expect(() =>
       validateRouteInput(
@@ -193,6 +223,76 @@ describe("validateRouteInput", () => {
         [],
       ),
     ).toThrow("header value is invalid");
+  });
+
+  it("rejects malformed input shape", () => {
+    expect(() =>
+      validateRouteInput(
+        {
+          prefix: 1,
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com",
+          customHeaders: [],
+          enabled: true,
+        } as never,
+        [],
+      ),
+    ).toThrow("prefix must be a string");
+
+    expect(() =>
+      validateRouteInput(
+        {
+          prefix: "/dav",
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com",
+          customHeaders: "x-test: one",
+          enabled: true,
+        } as never,
+        [],
+      ),
+    ).toThrow("customHeaders must be an array");
+  });
+
+  it("allows same-prefix update when currentId matches", () => {
+    expect(() =>
+      validateRouteInput(
+        {
+          prefix: "/dav",
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com",
+          customHeaders: [],
+          enabled: true,
+        },
+        [
+          {
+            id: "r1",
+            prefix: "/dav",
+            stripPrefix: true,
+            targetBaseUrl: "https://dav.example.com",
+            customHeaders: [],
+            enabled: true,
+            createdAt: "a",
+            updatedAt: "a",
+          },
+        ],
+        "r1",
+      ),
+    ).not.toThrow();
+  });
+
+  it("accepts one valid input", () => {
+    expect(() =>
+      validateRouteInput(
+        {
+          prefix: "/dav",
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com/base",
+          customHeaders: [{ name: "X-Test", value: "ok" }],
+          enabled: true,
+        },
+        [],
+      ),
+    ).not.toThrow();
   });
 });
 
