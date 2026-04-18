@@ -32,6 +32,9 @@ export function validateRouteInput(
   currentId?: string,
 ): void {
   if (!input.prefix.startsWith("/")) throw new Error("prefix must start with /");
+  if (input.prefix !== "/" && input.prefix.endsWith("/")) {
+    throw new Error("prefix must not end with /");
+  }
   if (
     RESERVED_PREFIXES.some(
       (prefix) =>
@@ -40,8 +43,14 @@ export function validateRouteInput(
   ) {
     throw new Error("prefix is reserved");
   }
-  if (!/^https?:\/\//.test(input.targetBaseUrl))
+  try {
+    const url = new URL(input.targetBaseUrl);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      throw new Error("targetBaseUrl must be an http or https URL");
+    }
+  } catch {
     throw new Error("targetBaseUrl must be an http or https URL");
+  }
   if (existing.some((route) => route.prefix === input.prefix && route.id !== currentId)) {
     throw new Error("prefix already exists");
   }
