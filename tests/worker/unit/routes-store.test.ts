@@ -75,6 +75,51 @@ describe("validateRouteInput", () => {
     ).toThrow("prefix must not end with /");
   });
 
+  it("rejects non-canonical prefixes", () => {
+    expect(() =>
+      validateRouteInput(
+        {
+          prefix: "/dav name",
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com",
+          customHeaders: [],
+          enabled: true,
+        },
+        [],
+      ),
+    ).toThrow("prefix must be a stable pathname");
+  });
+
+  it("rejects prefixes containing query", () => {
+    expect(() =>
+      validateRouteInput(
+        {
+          prefix: "/dav?x=1",
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com",
+          customHeaders: [],
+          enabled: true,
+        },
+        [],
+      ),
+    ).toThrow("prefix must be a stable pathname");
+  });
+
+  it("rejects prefixes containing hash", () => {
+    expect(() =>
+      validateRouteInput(
+        {
+          prefix: "/dav#x",
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com",
+          customHeaders: [],
+          enabled: true,
+        },
+        [],
+      ),
+    ).toThrow("prefix must be a stable pathname");
+  });
+
   it("rejects empty header names", () => {
     expect(() =>
       validateRouteInput(
@@ -118,6 +163,36 @@ describe("validateRouteInput", () => {
         [],
       ),
     ).toThrow("header name is forbidden");
+  });
+
+  it("rejects header names with surrounding whitespace", () => {
+    expect(() =>
+      validateRouteInput(
+        {
+          prefix: "/dav",
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com",
+          customHeaders: [{ name: " X-Test ", value: "value" }],
+          enabled: true,
+        },
+        [],
+      ),
+    ).toThrow("header name must not contain surrounding whitespace");
+  });
+
+  it("rejects header values with newline", () => {
+    expect(() =>
+      validateRouteInput(
+        {
+          prefix: "/dav",
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com",
+          customHeaders: [{ name: "X-Test", value: "line1\nline2" }],
+          enabled: true,
+        },
+        [],
+      ),
+    ).toThrow("header value is invalid");
   });
 });
 

@@ -13,6 +13,7 @@ const HOP_BY_HOP_HEADERS = new Set([
   "upgrade",
 ]);
 const HEADER_NAME_PATTERN = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
+const INVALID_HEADER_VALUE_PATTERN = /[\u0000-\u001f\u007f]/;
 
 export interface RouteHeader {
   name: string;
@@ -47,6 +48,13 @@ export function validateRouteInput(
   if (input.prefix !== "/" && input.prefix.endsWith("/")) {
     throw new Error("prefix must not end with /");
   }
+  if (input.prefix.includes("?") || input.prefix.includes("#")) {
+    throw new Error("prefix must be a stable pathname");
+  }
+  const canonicalPrefix = new URL(input.prefix, "https://example.invalid").pathname;
+  if (canonicalPrefix !== input.prefix) {
+    throw new Error("prefix must be a stable pathname");
+  }
   if (
     RESERVED_PREFIXES.some(
       (prefix) =>
@@ -68,11 +76,17 @@ export function validateRouteInput(
     if (!trimmedName) {
       throw new Error("header name is required");
     }
-    if (!HEADER_NAME_PATTERN.test(trimmedName)) {
+    if (header.name !== trimmedName) {
+      throw new Error("header name must not contain surrounding whitespace");
+    }
+    if (!HEADER_NAME_PATTERN.test(header.name)) {
       throw new Error("header name is invalid");
     }
-    if (HOP_BY_HOP_HEADERS.has(trimmedName.toLowerCase())) {
+    if (HOP_BY_HOP_HEADERS.has(header.name.toLowerCase())) {
       throw new Error("header name is forbidden");
+    }
+    if (INVALID_HEADER_VALUE_PATTERN.test(header.value)) {
+      throw new Error("header value is invalid");
     }
   }
   if (existing.some((route) => route.prefix === input.prefix && route.id !== currentId)) {
