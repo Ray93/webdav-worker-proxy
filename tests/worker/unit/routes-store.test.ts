@@ -297,9 +297,12 @@ describe("validateRouteInput", () => {
 });
 
 describe("routes kv persistence", () => {
-  it("round-trips routes through saveRoutes and listRoutes", async () => {
+  function makeEnv(initial?: string) {
     const kv = new Map<string, string>();
-    const env = {
+    if (initial !== undefined) {
+      kv.set("proxy.routes", initial);
+    }
+    return {
       APP_KV: {
         get: async (key: string) => kv.get(key) ?? null,
         put: async (key: string, value: string) => {
@@ -307,6 +310,20 @@ describe("routes kv persistence", () => {
         },
       },
     };
+  }
+
+  it("returns [] for malformed JSON in KV", async () => {
+    const env = makeEnv("{not-json");
+    await expect(listRoutes(env as never)).resolves.toEqual([]);
+  });
+
+  it("returns [] for wrong-shape JSON in KV", async () => {
+    const env = makeEnv(JSON.stringify({ id: "not-an-array" }));
+    await expect(listRoutes(env as never)).resolves.toEqual([]);
+  });
+
+  it("round-trips routes through saveRoutes and listRoutes", async () => {
+    const env = makeEnv();
 
     const routes = [
       {

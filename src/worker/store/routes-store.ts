@@ -1,6 +1,6 @@
 import { RESERVED_PREFIXES } from "../../shared/constants";
 import type { AppEnv } from "../../shared/types";
-import { getJson, KV_KEYS, putJson } from "./kv";
+import { KV_KEYS, putJson } from "./kv";
 
 const HOP_BY_HOP_HEADERS = new Set([
   "connection",
@@ -14,6 +14,33 @@ const HOP_BY_HOP_HEADERS = new Set([
 ]);
 const HEADER_NAME_PATTERN = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
 const INVALID_HEADER_VALUE_PATTERN = /[\u0000-\u001f\u007f]/;
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isRouteHeader(value: unknown): value is RouteHeader {
+  return (
+    isObject(value) &&
+    typeof value.name === "string" &&
+    typeof value.value === "string"
+  );
+}
+
+function isProxyRoute(value: unknown): value is ProxyRoute {
+  return (
+    isObject(value) &&
+    typeof value.id === "string" &&
+    typeof value.prefix === "string" &&
+    typeof value.stripPrefix === "boolean" &&
+    typeof value.targetBaseUrl === "string" &&
+    Array.isArray(value.customHeaders) &&
+    value.customHeaders.every(isRouteHeader) &&
+    typeof value.enabled === "boolean" &&
+    typeof value.createdAt === "string" &&
+    typeof value.updatedAt === "string"
+  );
+}
 
 export interface RouteHeader {
   name: string;
@@ -119,7 +146,18 @@ export function validateRouteInput(
 }
 
 export async function listRoutes(env: AppEnv): Promise<ProxyRoute[]> {
-  return getJson<ProxyRoute[]>(env, KV_KEYS.routes, []);
+  const raw = await env.APP_KV.get(KV_KEYS.routes);
+  if (!raw) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed) || !parsed.every(isProxyRoute)) {
+    return [];
+  }
+  return parsed;
 }
 
 export async function saveRoutes(env: AppEnv, routes: ProxyRoute[]): Promise<void> {
