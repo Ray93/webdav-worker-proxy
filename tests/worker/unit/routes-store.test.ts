@@ -60,6 +60,21 @@ describe("validateRouteInput", () => {
     ).toThrow("targetBaseUrl must be an http or https URL");
   });
 
+  it("rejects targetBaseUrl containing control/whitespace characters", () => {
+    expect(() =>
+      validateRouteInput(
+        {
+          prefix: "/dav",
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com/path\n",
+          customHeaders: [],
+          enabled: true,
+        },
+        [],
+      ),
+    ).toThrow("targetBaseUrl must not contain whitespace or control characters");
+  });
+
   it("rejects target URL with query", () => {
     expect(() =>
       validateRouteInput(
@@ -320,6 +335,41 @@ describe("routes kv persistence", () => {
   it("returns [] for wrong-shape JSON in KV", async () => {
     const env = makeEnv(JSON.stringify({ id: "not-an-array" }));
     await expect(listRoutes(env as never)).resolves.toEqual([]);
+  });
+
+  it("drops semantically invalid persisted routes", async () => {
+    const env = makeEnv(
+      JSON.stringify([
+        {
+          id: "bad1",
+          prefix: "/admin",
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com",
+          customHeaders: [],
+          enabled: true,
+          createdAt: "2026-04-18T00:00:00.000Z",
+          updatedAt: "2026-04-18T00:00:00.000Z",
+        },
+      ]),
+    );
+    await expect(listRoutes(env as never)).resolves.toEqual([]);
+  });
+
+  it("returns semantically valid persisted routes", async () => {
+    const routes = [
+      {
+        id: "r1",
+        prefix: "/dav",
+        stripPrefix: true,
+        targetBaseUrl: "https://dav.example.com",
+        customHeaders: [],
+        enabled: true,
+        createdAt: "2026-04-18T00:00:00.000Z",
+        updatedAt: "2026-04-18T00:00:00.000Z",
+      },
+    ];
+    const env = makeEnv(JSON.stringify(routes));
+    await expect(listRoutes(env as never)).resolves.toEqual(routes);
   });
 
   it("round-trips routes through saveRoutes and listRoutes", async () => {

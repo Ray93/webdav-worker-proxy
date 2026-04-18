@@ -14,6 +14,7 @@ const HOP_BY_HOP_HEADERS = new Set([
 ]);
 const HEADER_NAME_PATTERN = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
 const INVALID_HEADER_VALUE_PATTERN = /[\u0000-\u001f\u007f]/;
+const INVALID_TARGET_BASE_URL_INPUT_PATTERN = /[\u0000-\u0020\u007f]/;
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -83,6 +84,9 @@ export function validateRouteInput(
   }
   if (typeof input.enabled !== "boolean") {
     throw new Error("enabled must be a boolean");
+  }
+  if (INVALID_TARGET_BASE_URL_INPUT_PATTERN.test(input.targetBaseUrl)) {
+    throw new Error("targetBaseUrl must not contain whitespace or control characters");
   }
 
   if (!input.prefix.startsWith("/")) throw new Error("prefix must start with /");
@@ -157,7 +161,28 @@ export async function listRoutes(env: AppEnv): Promise<ProxyRoute[]> {
   if (!Array.isArray(parsed) || !parsed.every(isProxyRoute)) {
     return [];
   }
-  return parsed;
+
+  const routes: ProxyRoute[] = [];
+  for (const route of parsed) {
+    try {
+      validateRouteInput(
+        {
+          prefix: route.prefix,
+          stripPrefix: route.stripPrefix,
+          targetBaseUrl: route.targetBaseUrl,
+          customHeaders: route.customHeaders,
+          enabled: route.enabled,
+        },
+        routes,
+        route.id,
+      );
+      routes.push(route);
+    } catch {
+      // Drop semantically invalid persisted routes.
+    }
+  }
+
+  return routes;
 }
 
 export async function saveRoutes(env: AppEnv, routes: ProxyRoute[]): Promise<void> {
