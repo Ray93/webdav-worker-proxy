@@ -2,6 +2,18 @@ import { RESERVED_PREFIXES } from "../../shared/constants";
 import type { AppEnv } from "../../shared/types";
 import { getJson, KV_KEYS, putJson } from "./kv";
 
+const HOP_BY_HOP_HEADERS = new Set([
+  "connection",
+  "keep-alive",
+  "proxy-authenticate",
+  "proxy-authorization",
+  "te",
+  "trailer",
+  "transfer-encoding",
+  "upgrade",
+]);
+const HEADER_NAME_PATTERN = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
+
 export interface RouteHeader {
   name: string;
   value: string;
@@ -50,6 +62,18 @@ export function validateRouteInput(
     }
   } catch {
     throw new Error("targetBaseUrl must be an http or https URL");
+  }
+  for (const header of input.customHeaders) {
+    const trimmedName = header.name.trim();
+    if (!trimmedName) {
+      throw new Error("header name is required");
+    }
+    if (!HEADER_NAME_PATTERN.test(trimmedName)) {
+      throw new Error("header name is invalid");
+    }
+    if (HOP_BY_HOP_HEADERS.has(trimmedName.toLowerCase())) {
+      throw new Error("header name is forbidden");
+    }
   }
   if (existing.some((route) => route.prefix === input.prefix && route.id !== currentId)) {
     throw new Error("prefix already exists");

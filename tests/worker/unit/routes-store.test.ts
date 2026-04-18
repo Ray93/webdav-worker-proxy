@@ -74,6 +74,51 @@ describe("validateRouteInput", () => {
       ),
     ).toThrow("prefix must not end with /");
   });
+
+  it("rejects empty header names", () => {
+    expect(() =>
+      validateRouteInput(
+        {
+          prefix: "/dav",
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com",
+          customHeaders: [{ name: "   ", value: "value" }],
+          enabled: true,
+        },
+        [],
+      ),
+    ).toThrow("header name is required");
+  });
+
+  it("rejects malformed header names", () => {
+    expect(() =>
+      validateRouteInput(
+        {
+          prefix: "/dav",
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com",
+          customHeaders: [{ name: "bad header", value: "value" }],
+          enabled: true,
+        },
+        [],
+      ),
+    ).toThrow("header name is invalid");
+  });
+
+  it("rejects hop-by-hop headers", () => {
+    expect(() =>
+      validateRouteInput(
+        {
+          prefix: "/dav",
+          stripPrefix: true,
+          targetBaseUrl: "https://dav.example.com",
+          customHeaders: [{ name: "Connection", value: "keep-alive" }],
+          enabled: true,
+        },
+        [],
+      ),
+    ).toThrow("header name is forbidden");
+  });
 });
 
 describe("routes kv persistence", () => {
