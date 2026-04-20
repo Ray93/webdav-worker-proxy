@@ -38,10 +38,10 @@ export function RoutesPage(props: RoutesPageProps) {
       <section className="hero-card dashboard-shell">
         <div className="dashboard-header">
           <div>
-            <span className="eyebrow-pill">路由管理</span>
-            <h1>管理 WebDAV 转发规则</h1>
+            <span className="eyebrow-pill">规则中心</span>
+            <h1>管理转发规则</h1>
             <p className="hero-text">
-              支持固定目标基地址、可选去除前缀，并为每条规则维护自定义请求头。
+              统一维护访问路径、目标地址，以及转发时需要附加的请求头。
             </p>
           </div>
           <div className="header-actions">
@@ -56,7 +56,7 @@ export function RoutesPage(props: RoutesPageProps) {
 
         <div className="summary-grid">
           <article className="summary-card">
-            <span className="summary-label">总路由数</span>
+            <span className="summary-label">规则总数</span>
             <strong>{props.routes.length}</strong>
           </article>
           <article className="summary-card">
@@ -64,7 +64,7 @@ export function RoutesPage(props: RoutesPageProps) {
             <strong>{props.routes.filter((route) => route.enabled).length}</strong>
           </article>
           <article className="summary-card">
-            <span className="summary-label">保留前缀</span>
+            <span className="summary-label">保留原路径</span>
             <strong>{props.routes.filter((route) => !route.stripPrefix).length}</strong>
           </article>
         </div>
@@ -74,8 +74,8 @@ export function RoutesPage(props: RoutesPageProps) {
         <div className="route-list">
           {props.routes.length === 0 ? (
             <article className="route-card route-card-empty">
-              <h2>还没有代理规则</h2>
-              <p>先创建一条路由，把前缀、目标基地址和自定义请求头配置进去。</p>
+              <h2>还没有转发规则</h2>
+              <p>先新增一条规则，设置访问路径、目标地址和需要附加的请求头。</p>
             </article>
           ) : null}
 
@@ -93,10 +93,10 @@ export function RoutesPage(props: RoutesPageProps) {
 
               <div className="route-metadata">
                 <span className="meta-pill">
-                  {route.stripPrefix ? "去除前缀" : "保留前缀"}
+                  {route.stripPrefix ? "不保留路径前缀" : "保留路径前缀"}
                 </span>
                 <span className="meta-pill">
-                  {route.customHeaders.length} 个请求头
+                  {route.customHeaders.length} 个附加请求头
                 </span>
               </div>
 

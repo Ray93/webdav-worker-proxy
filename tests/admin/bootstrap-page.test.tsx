@@ -6,7 +6,7 @@ describe("BootstrapPage", () => {
   it("shows the generated secret name and action copy", () => {
     render(
       <BootstrapPage
-        state="secret_pending"
+        state="confirm_secret"
         secretName="ADMIN_SESSION_SECRET"
         generatedSecret="abc123"
         onSubmit={vi.fn(async () => undefined)}
@@ -14,6 +14,7 @@ describe("BootstrapPage", () => {
       />,
     );
 
+    expect(screen.getByText("完成密钥配置")).toBeInTheDocument();
     expect(screen.getByText("ADMIN_SESSION_SECRET")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "我已完成" })).toBeInTheDocument();
   });

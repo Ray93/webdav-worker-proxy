@@ -37,7 +37,7 @@ export function RouteFormDialog(props: RouteFormDialogProps) {
             <div>
               <Dialog.Title className="dialog-title">{props.title}</Dialog.Title>
               <Dialog.Description className="dialog-description">
-                配置请求路径前缀、目标基地址和需要追加到上游的自定义请求头。
+                设置访问路径、目标地址，以及转发时需要附加的请求头。
               </Dialog.Description>
             </div>
             <Dialog.Close className="ghost-button" type="button">
@@ -73,7 +73,7 @@ export function RouteFormDialog(props: RouteFormDialogProps) {
             </label>
 
             <div className="field">
-              <span>路径策略</span>
+              <span>路径处理方式</span>
               <div className="segmented-control">
                 <button
                   className={value.stripPrefix ? "segment is-active" : "segment"}
@@ -91,13 +91,13 @@ export function RouteFormDialog(props: RouteFormDialogProps) {
                 </button>
               </div>
               <p className="field-hint">
-                去除前缀时，转发到目标基地址；保留前缀时，将匹配前缀拼接到目标基地址之后。
+                不保留路径前缀时，请求会直接接到目标地址后面；保留时，会把当前访问路径一并带过去。
               </p>
             </div>
 
             <div className="field">
               <div className="field-inline">
-                <span>自定义请求头</span>
+                <span>附加请求头</span>
                 <button
                   className="ghost-button"
                   onClick={() =>
@@ -108,13 +108,13 @@ export function RouteFormDialog(props: RouteFormDialogProps) {
                   }
                   type="button"
                 >
-                  添加请求头
+                  添加一项
                 </button>
               </div>
 
               <div className="header-list">
                 {value.customHeaders.length === 0 ? (
-                  <div className="empty-hint">当前没有自定义头，请按需追加。</div>
+                  <div className="empty-hint">当前没有附加请求头，可按需补充。</div>
                 ) : null}
 
                 {value.customHeaders.map((header, index) => (

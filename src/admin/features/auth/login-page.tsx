@@ -13,19 +13,19 @@ export function LoginPage(props: LoginPageProps) {
     <main className="page-shell">
       <section className="hero-card hero-card-grid">
         <div className="hero-copy">
-          <span className="eyebrow-pill">管理员登录</span>
-          <h1>用密码进入代理管理台</h1>
+          <span className="eyebrow-pill">管理入口</span>
+          <h1>登录转发管理台</h1>
           <p className="hero-text">
-            登录后可以维护前缀路由、控制是否去除前缀，并为上游请求附加自定义头。
+            登录后可统一维护转发规则、目标地址，以及需要附加到请求中的自定义头。
           </p>
           <div className="info-stack">
             <div className="info-card">
-              <span className="info-label">转发规则</span>
-              <p>支持多对多路由，按最长前缀命中。</p>
+              <span className="info-label">规则管理</span>
+              <p>支持多条规则并行生效，系统会优先匹配更具体的访问路径。</p>
             </div>
             <div className="info-card">
-              <span className="info-label">WebDAV 兼容</span>
-              <p>保留流式转发，并处理 Destination / Location 头。</p>
+              <span className="info-label">兼容处理</span>
+              <p>常见 WebDAV 相关请求头会按规则自动调整，减少手动处理成本。</p>
             </div>
           </div>
         </div>
@@ -38,8 +38,8 @@ export function LoginPage(props: LoginPageProps) {
           }}
         >
           <div className="panel-header">
-            <h2>输入管理员密码</h2>
-            <p>只需要密码，不需要用户名。登录状态会保存在安全 Cookie 中。</p>
+            <h2>输入管理密码</h2>
+            <p>仅需输入你设置的管理密码，登录状态会保留在当前浏览器中。</p>
           </div>
 
           <label className="field">
@@ -48,7 +48,7 @@ export function LoginPage(props: LoginPageProps) {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="输入之前创建的管理员密码"
+              placeholder="请输入管理密码"
             />
           </label>
 

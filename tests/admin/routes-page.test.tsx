@@ -26,6 +26,7 @@ describe("RoutesPage", () => {
       />,
     );
 
+    expect(screen.getByText("管理转发规则")).toBeInTheDocument();
     expect(screen.getByText("/dav")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "新增路由" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "编辑" })).toBeInTheDocument();

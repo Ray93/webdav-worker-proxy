@@ -23,7 +23,7 @@ import { BootstrapPage } from "./features/bootstrap/bootstrap-page";
 import { LoginPage } from "./features/auth/login-page";
 import { RoutesPage } from "./features/routes/routes-page";
 
-type LocalBootstrapState = BootstrapResponse["state"] | "secret_pending";
+type LocalBootstrapState = BootstrapResponse["state"] | "confirm_secret";
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "请求失败";
@@ -34,8 +34,8 @@ function LoadingScreen() {
     <main className="page-shell">
       <section className="hero-card loading-card">
         <span className="eyebrow-pill">加载中</span>
-        <h1>正在同步管理台状态</h1>
-        <p className="hero-text">读取初始化状态、会话信息和当前代理路由。</p>
+        <h1>正在准备管理台</h1>
+        <p className="hero-text">正在读取当前配置和登录状态，请稍候。</p>
       </section>
     </main>
   );
@@ -156,7 +156,7 @@ export default function App() {
                       secretName: result.secretName,
                     },
               );
-              setLocalBootstrapState("secret_pending");
+              setLocalBootstrapState("confirm_secret");
             });
           } catch (error) {
             setBootstrapError(getErrorMessage(error));
