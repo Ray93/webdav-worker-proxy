@@ -1,3 +1,4 @@
+// @ts-expect-error provided by @cloudflare/vitest-pool-workers at test runtime
 import { SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 
@@ -14,6 +15,7 @@ describe("admin route api", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ password: "secret-pass" }),
     });
+    expect(login.status).toBe(200);
 
     const cookie = login.headers.get("set-cookie")!;
 
@@ -62,5 +64,76 @@ describe("admin route api", () => {
       headers: { cookie },
     });
     expect(deleted.status).toBe(204);
+  });
+
+  it("returns stable 4xx errors for malformed payloads and missing routes", async () => {
+    await SELF.fetch("https://example.com/api/admin/setup", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password: "secret-pass" }),
+    });
+
+    const login = await SELF.fetch("https://example.com/api/admin/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password: "secret-pass" }),
+    });
+    expect(login.status).toBe(200);
+
+    const cookie = login.headers.get("set-cookie")!;
+
+    const malformed = await SELF.fetch("https://example.com/api/admin/routes", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        cookie,
+      },
+      body: "{invalid",
+    });
+    expect(malformed.status).toBe(400);
+
+    const created = await SELF.fetch("https://example.com/api/admin/routes", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        cookie,
+      },
+      body: JSON.stringify({
+        prefix: "/dup",
+        stripPrefix: true,
+        targetBaseUrl: "https://dav.example.com/root",
+        customHeaders: [{ name: "x-upstream-token", value: "abc" }],
+        enabled: true,
+      }),
+    });
+    expect(created.status).toBe(201);
+
+    const duplicate = await SELF.fetch("https://example.com/api/admin/routes", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        cookie,
+      },
+      body: JSON.stringify({
+        prefix: "/dup",
+        stripPrefix: true,
+        targetBaseUrl: "https://dav.example.com/root2",
+        customHeaders: [{ name: "x-upstream-token", value: "abc" }],
+        enabled: true,
+      }),
+    });
+    expect(duplicate.status).toBe(409);
+
+    const missingToggle = await SELF.fetch("https://example.com/api/admin/routes/missing-id/toggle", {
+      method: "PATCH",
+      headers: { cookie },
+    });
+    expect(missingToggle.status).toBe(404);
+
+    const missingDelete = await SELF.fetch("https://example.com/api/admin/routes/missing-id", {
+      method: "DELETE",
+      headers: { cookie },
+    });
+    expect(missingDelete.status).toBe(404);
   });
 });

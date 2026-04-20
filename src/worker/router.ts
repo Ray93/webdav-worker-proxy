@@ -47,7 +47,7 @@ export async function routeRequest(request: Request, env: AppEnv): Promise<Respo
     if (/^\/api\/admin\/routes\/[^/]+$/.test(url.pathname) && request.method === "PUT") {
       return handleUpdateRoute(env, url.pathname.split("/")[4], request);
     }
-    if (url.pathname.endsWith("/toggle") && request.method === "PATCH") {
+    if (/^\/api\/admin\/routes\/[^/]+\/toggle$/.test(url.pathname) && request.method === "PATCH") {
       return handleToggleRoute(env, url.pathname.split("/")[4]);
     }
     if (/^\/api\/admin\/routes\/[^/]+$/.test(url.pathname) && request.method === "DELETE") {

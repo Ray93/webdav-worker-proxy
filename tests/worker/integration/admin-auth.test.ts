@@ -1,6 +1,7 @@
 // @ts-expect-error provided by @cloudflare/vitest-pool-workers at test runtime
 import { SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
+import { signSession } from "../../../src/worker/security/session";
 
 describe("admin bootstrap and auth", () => {
   it("follows bootstrap flow and enforces secret requirements", async () => {
@@ -29,5 +30,16 @@ describe("admin bootstrap and auth", () => {
     });
     expect(secondSetup.status).toBe(409);
     expect(await secondSetup.json()).toMatchObject({ error: "already initialized" });
+  });
+
+  it("denies admin routes when runtime secret is missing", async () => {
+    const token = await signSession("");
+    const response = await SELF.fetch("https://example.com/api/admin/routes", {
+      method: "GET",
+      headers: { cookie: `admin_session=${token}` },
+    });
+
+    expect(response.status).toBe(401);
+    expect(await response.json()).toMatchObject({ error: "unauthorized" });
   });
 });

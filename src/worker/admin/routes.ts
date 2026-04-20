@@ -13,12 +13,28 @@ function getCookieToken(request: Request): string | null {
   return cookie.split("; ").find((part) => part.startsWith("admin_session="))?.split("=")[1] ?? null;
 }
 
+function errorResponse(status: number, error: string): Response {
+  return Response.json({ error }, { status });
+}
+
+function routeInputError(error: unknown): Response {
+  if (error instanceof Error && error.message === "prefix already exists") {
+    return errorResponse(409, error.message);
+  }
+
+  if (error instanceof Error && error.message) {
+    return errorResponse(400, error.message);
+  }
+
+  return errorResponse(400, "invalid route payload");
+}
+
 export async function requireAdmin(request: Request, env: AppEnv): Promise<Response | null> {
   const token = getCookieToken(request);
-  const secret = env.ADMIN_SESSION_SECRET ?? "";
+  const secret = env.ADMIN_SESSION_SECRET?.trim();
 
-  if (!token || !(await verifySession(token, secret))) {
-    return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 });
+  if (!secret || !token || !(await verifySession(token, secret))) {
+    return errorResponse(401, "unauthorized");
   }
 
   return null;
@@ -29,9 +45,19 @@ export async function handleListRoutes(env: AppEnv): Promise<Response> {
 }
 
 export async function handleCreateRoute(env: AppEnv, request: Request): Promise<Response> {
-  const input = (await request.json()) as RouteInput;
+  let input: RouteInput;
+  try {
+    input = (await request.json()) as RouteInput;
+  } catch {
+    return errorResponse(400, "invalid json");
+  }
+
   const existing = await listRoutes(env);
-  validateRouteInput(input, existing);
+  try {
+    validateRouteInput(input, existing);
+  } catch (error) {
+    return routeInputError(error);
+  }
 
   const now = new Date().toISOString();
   const route: ProxyRoute = { id: crypto.randomUUID(), ...input, createdAt: now, updatedAt: now };
@@ -42,10 +68,19 @@ export async function handleCreateRoute(env: AppEnv, request: Request): Promise<
 
 export async function handleToggleRoute(env: AppEnv, routeId: string): Promise<Response> {
   const routes = await listRoutes(env);
-  const next = routes.map((route) =>
-    route.id === routeId ? { ...route, enabled: !route.enabled, updatedAt: new Date().toISOString() } : route,
-  );
-  const toggled = next.find((route) => route.id === routeId);
+  const index = routes.findIndex((route) => route.id === routeId);
+  if (index === -1) {
+    return errorResponse(404, "route not found");
+  }
+
+  const current = routes[index];
+  const toggled: ProxyRoute = {
+    ...current,
+    enabled: !current.enabled,
+    updatedAt: new Date().toISOString(),
+  };
+  const next = [...routes];
+  next[index] = toggled;
 
   await saveRoutes(env, next);
 
@@ -53,13 +88,23 @@ export async function handleToggleRoute(env: AppEnv, routeId: string): Promise<R
 }
 
 export async function handleUpdateRoute(env: AppEnv, routeId: string, request: Request): Promise<Response> {
-  const input = (await request.json()) as RouteInput;
   const routes = await listRoutes(env);
-  validateRouteInput(input, routes, routeId);
-
   const current = routes.find((route) => route.id === routeId);
   if (!current) {
-    return new Response(JSON.stringify({ error: "route not found" }), { status: 404 });
+    return errorResponse(404, "route not found");
+  }
+
+  let input: RouteInput;
+  try {
+    input = (await request.json()) as RouteInput;
+  } catch {
+    return errorResponse(400, "invalid json");
+  }
+
+  try {
+    validateRouteInput(input, routes, routeId);
+  } catch (error) {
+    return routeInputError(error);
   }
 
   const updated: ProxyRoute = {
@@ -78,6 +123,10 @@ export async function handleUpdateRoute(env: AppEnv, routeId: string, request: R
 
 export async function handleDeleteRoute(env: AppEnv, routeId: string): Promise<Response> {
   const routes = await listRoutes(env);
+  if (!routes.some((route) => route.id === routeId)) {
+    return errorResponse(404, "route not found");
+  }
+
   await saveRoutes(env, routes.filter((route) => route.id !== routeId));
 
   return new Response(null, { status: 204 });
