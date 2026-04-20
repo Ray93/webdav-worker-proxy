@@ -11,5 +11,5 @@
     "allowImportingTsExtensions": true,
     "baseUrl": "."
   },
-  "include": ["src", "tests", "vite.config.ts", "vitest.config.ts"]
+  "include": ["src", "tests", "vite.config.ts", "vitest.config.ts", "vitest.admin.config.ts"]
 }

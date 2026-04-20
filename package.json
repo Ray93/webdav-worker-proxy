@@ -3,10 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "dev": "vite build --watch",
+    "build": "vite build --config vite.config.ts",
+    "dev": "vite build --config vite.config.ts --watch",
     "deploy": "wrangler deploy",
-    "test": "vitest run",
+    "test": "npm run test:worker && npm run test:admin",
+    "test:worker": "vitest run --config vitest.config.ts",
+    "test:admin": "vitest run --config vitest.admin.config.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
