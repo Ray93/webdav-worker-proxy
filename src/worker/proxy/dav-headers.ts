@@ -6,6 +6,10 @@ interface DestinationInput {
   destination: string;
   proxyOrigin: string;
 }
+type DestinationRewriteResult =
+  | { kind: "rewritten"; value: string }
+  | { kind: "passthrough"; value: string }
+  | { kind: "invalid"; value: string };
 
 interface ResponseLocationInput {
   route: ProxyRoute;
@@ -56,29 +60,31 @@ function mapUpstreamPathToProxyPath(
   return `${route.prefix}${relativePath}`;
 }
 
-export function rewriteDestinationHeader(input: DestinationInput): string {
+export function rewriteDestinationHeader(
+  input: DestinationInput,
+): DestinationRewriteResult {
   let destinationUrl: URL;
   let proxyUrl: URL;
   try {
     destinationUrl = new URL(input.destination);
     proxyUrl = new URL(input.proxyOrigin);
   } catch {
-    return input.destination;
+    return { kind: "passthrough", value: input.destination };
   }
 
   if (destinationUrl.origin !== proxyUrl.origin) {
-    return input.destination;
+    return { kind: "passthrough", value: input.destination };
   }
 
   if (!hasRoutePrefix(destinationUrl.pathname, input.route.prefix)) {
-    return input.destination;
+    return { kind: "invalid", value: input.destination };
   }
   const requestUrl = new URL(
     `https://placeholder${destinationUrl.pathname}${destinationUrl.search}`,
   );
   const rewritten = new URL(buildTargetUrl(input.route, requestUrl));
   rewritten.hash = destinationUrl.hash;
-  return rewritten.toString();
+  return { kind: "rewritten", value: rewritten.toString() };
 }
 
 export function rewriteResponseLocation(input: ResponseLocationInput): string {

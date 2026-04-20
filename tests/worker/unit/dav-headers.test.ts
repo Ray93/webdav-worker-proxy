@@ -28,30 +28,39 @@ describe("rewriteDestinationHeader", () => {
         proxyOrigin,
         destination: "https://proxy.example.com/dav/folder/file.txt",
       }),
-    ).toBe("https://dav.example.com/root/folder/file.txt");
+    ).toEqual({
+      kind: "rewritten",
+      value: "https://dav.example.com/root/folder/file.txt",
+    });
   });
 
-  it("keeps non-matching destinations unchanged", () => {
+  it("returns same-origin non-matching destinations as invalid", () => {
     expect(
       rewriteDestinationHeader({
         route: davRoute,
         proxyOrigin,
         destination: "https://proxy.example.com/other/folder/file.txt",
       }),
-    ).toBe("https://proxy.example.com/other/folder/file.txt");
+    ).toEqual({
+      kind: "invalid",
+      value: "https://proxy.example.com/other/folder/file.txt",
+    });
   });
 
-  it("returns cross-origin destinations unchanged", () => {
+  it("returns cross-origin destinations as passthrough", () => {
     expect(
       rewriteDestinationHeader({
         route: davRoute,
         proxyOrigin,
         destination: "https://another-proxy.example.com/dav/folder/file.txt",
       }),
-    ).toBe("https://another-proxy.example.com/dav/folder/file.txt");
+    ).toEqual({
+      kind: "passthrough",
+      value: "https://another-proxy.example.com/dav/folder/file.txt",
+    });
   });
 
-  it("returns malformed destinations unchanged without throwing", () => {
+  it("returns malformed destinations as passthrough without throwing", () => {
     expect(() =>
       rewriteDestinationHeader({
         route: davRoute,
@@ -66,7 +75,10 @@ describe("rewriteDestinationHeader", () => {
         proxyOrigin,
         destination: "not a url",
       }),
-    ).toBe("not a url");
+    ).toEqual({
+      kind: "passthrough",
+      value: "not a url",
+    });
   });
 
   it("preserves hash in rewritten destination", () => {
@@ -76,7 +88,10 @@ describe("rewriteDestinationHeader", () => {
         proxyOrigin,
         destination: "https://proxy.example.com/dav/folder/file.txt?download=1#part",
       }),
-    ).toBe("https://dav.example.com/root/folder/file.txt?download=1#part");
+    ).toEqual({
+      kind: "rewritten",
+      value: "https://dav.example.com/root/folder/file.txt?download=1#part",
+    });
   });
 });
 
