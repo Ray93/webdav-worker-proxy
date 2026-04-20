@@ -12,11 +12,23 @@ import {
 } from "./admin/routes";
 import { maybeProxyRequest } from "./proxy/forward-request";
 
+function rewriteAdminAssetRequest(request: Request): Request {
+  const url = new URL(request.url);
+
+  if (url.pathname === ADMIN_UI_PREFIX || url.pathname === `${ADMIN_UI_PREFIX}/`) {
+    url.pathname = "/index.html";
+  } else {
+    url.pathname = url.pathname.slice(ADMIN_UI_PREFIX.length) || "/index.html";
+  }
+
+  return new Request(url, request);
+}
+
 export async function routeRequest(request: Request, env: AppEnv): Promise<Response> {
   const url = new URL(request.url);
 
   if (url.pathname === ADMIN_UI_PREFIX || url.pathname.startsWith(`${ADMIN_UI_PREFIX}/`)) {
-    return env.ASSETS.fetch(request);
+    return env.ASSETS.fetch(rewriteAdminAssetRequest(request));
   }
 
   if (url.pathname === "/api/admin/bootstrap" && request.method === "GET") {
