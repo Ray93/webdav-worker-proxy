@@ -14,12 +14,14 @@ const davRoute = {
   createdAt: "",
   updatedAt: "",
 };
+const proxyOrigin = "https://proxy.example.com";
 
 describe("rewriteDestinationHeader", () => {
   it("rewrites proxy-domain destinations to the upstream URL", () => {
     expect(
       rewriteDestinationHeader({
         route: davRoute,
+        proxyOrigin,
         destination: "https://proxy.example.com/dav/folder/file.txt",
       }),
     ).toBe("https://dav.example.com/root/folder/file.txt");
@@ -29,9 +31,48 @@ describe("rewriteDestinationHeader", () => {
     expect(
       rewriteDestinationHeader({
         route: davRoute,
+        proxyOrigin,
         destination: "https://proxy.example.com/other/folder/file.txt",
       }),
     ).toBe("https://proxy.example.com/other/folder/file.txt");
+  });
+
+  it("returns cross-origin destinations unchanged", () => {
+    expect(
+      rewriteDestinationHeader({
+        route: davRoute,
+        proxyOrigin,
+        destination: "https://another-proxy.example.com/dav/folder/file.txt",
+      }),
+    ).toBe("https://another-proxy.example.com/dav/folder/file.txt");
+  });
+
+  it("returns malformed destinations unchanged without throwing", () => {
+    expect(() =>
+      rewriteDestinationHeader({
+        route: davRoute,
+        proxyOrigin,
+        destination: "not a url",
+      }),
+    ).not.toThrow();
+
+    expect(
+      rewriteDestinationHeader({
+        route: davRoute,
+        proxyOrigin,
+        destination: "not a url",
+      }),
+    ).toBe("not a url");
+  });
+
+  it("preserves hash in rewritten destination", () => {
+    expect(
+      rewriteDestinationHeader({
+        route: davRoute,
+        proxyOrigin,
+        destination: "https://proxy.example.com/dav/folder/file.txt?download=1#part",
+      }),
+    ).toBe("https://dav.example.com/root/folder/file.txt?download=1#part");
   });
 });
 
@@ -85,5 +126,15 @@ describe("rewriteResponseLocation", () => {
         proxyOrigin: "https://proxy.example.com",
       }),
     ).toBe("https://proxy.example.com/folder/file.txt");
+  });
+
+  it("preserves hash in rewritten response location", () => {
+    expect(
+      rewriteResponseLocation({
+        route: davRoute,
+        location: "https://dav.example.com/root/folder/file.txt?download=1#part",
+        proxyOrigin,
+      }),
+    ).toBe("https://proxy.example.com/dav/folder/file.txt?download=1#part");
   });
 });

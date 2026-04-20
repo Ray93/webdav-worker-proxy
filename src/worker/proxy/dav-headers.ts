@@ -4,6 +4,7 @@ import { buildTargetUrl } from "./build-target-url";
 interface DestinationInput {
   route: ProxyRoute;
   destination: string;
+  proxyOrigin: string;
 }
 
 interface ResponseLocationInput {
@@ -51,14 +52,28 @@ function mapUpstreamPathToProxyPath(
 }
 
 export function rewriteDestinationHeader(input: DestinationInput): string {
-  const destinationUrl = new URL(input.destination);
+  let destinationUrl: URL;
+  let proxyUrl: URL;
+  try {
+    destinationUrl = new URL(input.destination);
+    proxyUrl = new URL(input.proxyOrigin);
+  } catch {
+    return input.destination;
+  }
+
+  if (destinationUrl.origin !== proxyUrl.origin) {
+    return input.destination;
+  }
+
   if (!hasRoutePrefix(destinationUrl.pathname, input.route.prefix)) {
     return input.destination;
   }
   const requestUrl = new URL(
     `https://placeholder${destinationUrl.pathname}${destinationUrl.search}`,
   );
-  return buildTargetUrl(input.route, requestUrl);
+  const rewritten = new URL(buildTargetUrl(input.route, requestUrl));
+  rewritten.hash = destinationUrl.hash;
+  return rewritten.toString();
 }
 
 export function rewriteResponseLocation(input: ResponseLocationInput): string {
@@ -80,5 +95,5 @@ export function rewriteResponseLocation(input: ResponseLocationInput): string {
   );
   if (!rewrittenPath) return input.location;
 
-  return `${input.proxyOrigin.replace(/\/$/, "")}${rewrittenPath}${locationUrl.search}`;
+  return `${input.proxyOrigin.replace(/\/$/, "")}${rewrittenPath}${locationUrl.search}${locationUrl.hash}`;
 }
