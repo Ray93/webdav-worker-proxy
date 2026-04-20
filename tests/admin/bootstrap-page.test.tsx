@@ -14,8 +14,14 @@ describe("BootstrapPage", () => {
       />,
     );
 
-    expect(screen.getByText("完成密钥配置")).toBeInTheDocument();
-    expect(screen.getByText("ADMIN_SESSION_SECRET")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "先完成管理台初始化" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "继续完成安全密钥设置" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("ADMIN_SESSION_SECRET")).toHaveLength(2);
+    expect(screen.getByText("abc123")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "我已完成" })).toBeInTheDocument();
   });
 });

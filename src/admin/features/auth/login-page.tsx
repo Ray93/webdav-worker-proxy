@@ -12,21 +12,21 @@ export function LoginPage(props: LoginPageProps) {
   return (
     <main className="page-shell">
       <section className="hero-card hero-card-grid">
-        <div className="hero-copy">
+        <div className="hero-copy hero-copy-spacious">
           <span className="eyebrow-pill">管理入口</span>
-          <h1>登录转发管理台</h1>
+          <h1>进入转发管理台</h1>
           <p className="hero-text">
-            登录后可统一维护转发规则、目标地址，以及需要附加到请求中的自定义头。
+            在一个页面里维护所有转发规则，统一管理目标地址、路径处理方式和附加请求头。
           </p>
           <div className="info-stack">
-            <div className="info-card">
-              <span className="info-label">规则管理</span>
-              <p>支持多条规则并行生效，系统会优先匹配更具体的访问路径。</p>
-            </div>
-            <div className="info-card">
-              <span className="info-label">兼容处理</span>
-              <p>常见 WebDAV 相关请求头会按规则自动调整，减少手动处理成本。</p>
-            </div>
+            <article className="info-card">
+              <span className="info-label">统一管理</span>
+              <p>支持多条路由并行生效，系统会优先匹配更具体的访问路径。</p>
+            </article>
+            <article className="info-card">
+              <span className="info-label">减少重复操作</span>
+              <p>常见 WebDAV 请求头会随规则一起保存，下次调整时不需要重新输入。</p>
+            </article>
           </div>
         </div>
 
@@ -38,8 +38,9 @@ export function LoginPage(props: LoginPageProps) {
           }}
         >
           <div className="panel-header">
+            <span className="section-tag">登录</span>
             <h2>输入管理密码</h2>
-            <p>仅需输入你设置的管理密码，登录状态会保留在当前浏览器中。</p>
+            <p>只需要输入你设置过的密码，登录状态会保留在当前浏览器里。</p>
           </div>
 
           <label className="field">
@@ -51,6 +52,11 @@ export function LoginPage(props: LoginPageProps) {
               placeholder="请输入管理密码"
             />
           </label>
+
+          <div className="support-note">
+            <strong>如果页面回到初始化流程。</strong>
+            <p>通常表示运行时 Secret 被删除或尚未配置，需要重新完成初始化设置。</p>
+          </div>
 
           {props.error ? <p className="form-error">{props.error}</p> : null}
 

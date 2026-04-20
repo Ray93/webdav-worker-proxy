@@ -37,11 +37,11 @@ export function RoutesPage(props: RoutesPageProps) {
     <main className="page-shell">
       <section className="hero-card dashboard-shell">
         <div className="dashboard-header">
-          <div>
+          <div className="dashboard-copy">
             <span className="eyebrow-pill">规则中心</span>
-            <h1>管理转发规则</h1>
+            <h1>统一管理转发规则</h1>
             <p className="hero-text">
-              统一维护访问路径、目标地址，以及转发时需要附加的请求头。
+              规则会按访问路径自动匹配到对应目标地址。你可以在这里统一维护前缀、路径处理方式和附加请求头。
             </p>
           </div>
           <div className="header-actions">
@@ -58,14 +58,17 @@ export function RoutesPage(props: RoutesPageProps) {
           <article className="summary-card">
             <span className="summary-label">规则总数</span>
             <strong>{props.routes.length}</strong>
+            <p>当前已保存的转发配置</p>
           </article>
           <article className="summary-card">
             <span className="summary-label">已启用</span>
             <strong>{props.routes.filter((route) => route.enabled).length}</strong>
+            <p>正在参与匹配与转发</p>
           </article>
           <article className="summary-card">
             <span className="summary-label">保留原路径</span>
             <strong>{props.routes.filter((route) => !route.stripPrefix).length}</strong>
+            <p>请求路径会连同前缀一并转发</p>
           </article>
         </div>
 
@@ -74,34 +77,39 @@ export function RoutesPage(props: RoutesPageProps) {
         <div className="route-list">
           {props.routes.length === 0 ? (
             <article className="route-card route-card-empty">
-              <h2>还没有转发规则</h2>
-              <p>先新增一条规则，设置访问路径、目标地址和需要附加的请求头。</p>
+              <span className="empty-pill">从这里开始</span>
+              <h2>先添加第一条转发规则</h2>
+              <p>从一个访问前缀开始，把请求转发到正确的目标地址。</p>
             </article>
           ) : null}
 
           {props.routes.map((route) => (
             <article className="route-card" key={route.id}>
               <div className="route-card-head">
-                <div>
+                <div className="route-title-group">
+                  <span className="route-label">访问前缀</span>
                   <h2>{route.prefix}</h2>
-                  <p>{route.targetBaseUrl}</p>
                 </div>
                 <span className={route.enabled ? "status-pill is-enabled" : "status-pill"}>
                   {route.enabled ? "启用中" : "已停用"}
                 </span>
               </div>
 
+              <div className="route-destination">
+                <span className="route-label">目标地址</span>
+                <p>{route.targetBaseUrl}</p>
+              </div>
+
               <div className="route-metadata">
                 <span className="meta-pill">
-                  {route.stripPrefix ? "不保留路径前缀" : "保留路径前缀"}
+                  {route.stripPrefix ? "去除前缀后转发" : "保留前缀后转发"}
                 </span>
-                <span className="meta-pill">
-                  {route.customHeaders.length} 个附加请求头
-                </span>
+                <span className="meta-pill">{route.customHeaders.length} 个附加请求头</span>
               </div>
 
               {route.customHeaders.length > 0 ? (
                 <div className="header-preview">
+                  <span className="route-label">附加请求头</span>
                   {route.customHeaders.map((header) => (
                     <code key={`${route.id}-${header.name}`}>
                       {header.name}: {header.value}

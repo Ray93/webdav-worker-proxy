@@ -32,7 +32,9 @@ describe("App bootstrap flow", () => {
 
     render(<App />);
 
-    expect(await screen.findByText("设置管理密码")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "创建登录密码" }),
+    ).toBeInTheDocument();
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledTimes(1);

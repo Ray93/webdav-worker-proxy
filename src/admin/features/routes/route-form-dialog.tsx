@@ -35,9 +35,10 @@ export function RouteFormDialog(props: RouteFormDialogProps) {
         <Dialog.Content className="dialog-card">
           <div className="dialog-header">
             <div>
+              <span className="section-tag">路由编辑</span>
               <Dialog.Title className="dialog-title">{props.title}</Dialog.Title>
               <Dialog.Description className="dialog-description">
-                设置访问路径、目标地址，以及转发时需要附加的请求头。
+                按顺序填写访问前缀、目标地址和附加请求头，保存后规则会立刻出现在列表中。
               </Dialog.Description>
             </div>
             <Dialog.Close className="ghost-button" type="button">
@@ -59,6 +60,7 @@ export function RouteFormDialog(props: RouteFormDialogProps) {
                 onChange={(event) => setValue({ ...value, prefix: event.target.value })}
                 placeholder="/dav"
               />
+              <p className="field-hint">访问这个前缀时，请求会命中当前这条转发规则。</p>
             </label>
 
             <label className="field">
@@ -70,6 +72,7 @@ export function RouteFormDialog(props: RouteFormDialogProps) {
                 }
                 placeholder="https://dav.example.com/root"
               />
+              <p className="field-hint">这里填写远端 WebDAV 服务的固定基地址。</p>
             </label>
 
             <div className="field">
@@ -111,6 +114,10 @@ export function RouteFormDialog(props: RouteFormDialogProps) {
                   添加一项
                 </button>
               </div>
+
+              <p className="field-hint">
+                适合放认证信息或上游服务要求的固定请求头。没有需求时可以留空。
+              </p>
 
               <div className="header-list">
                 {value.customHeaders.length === 0 ? (

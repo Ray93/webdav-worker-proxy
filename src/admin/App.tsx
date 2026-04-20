@@ -33,9 +33,9 @@ function LoadingScreen() {
   return (
     <main className="page-shell">
       <section className="hero-card loading-card">
-        <span className="eyebrow-pill">加载中</span>
-        <h1>正在准备管理台</h1>
-        <p className="hero-text">正在读取当前配置和登录状态，请稍候。</p>
+        <span className="eyebrow-pill">准备中</span>
+        <h1>正在打开管理台</h1>
+        <p className="hero-text">正在读取配置和登录状态，请稍候。</p>
       </section>
     </main>
   );
