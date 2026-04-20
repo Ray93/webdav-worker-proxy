@@ -1,10 +1,12 @@
-import { defineConfig } from "vitest/config";
+import { defineWorkersConfig } from "@cloudflare/vitest-pool-workers/config";
 
-export default defineConfig({
+export default defineWorkersConfig({
   test: {
-    environmentMatchGlobs: [
-      ["tests/admin/**", "jsdom"],
-      ["tests/worker/**", "node"],
-    ],
+    globals: true,
+    poolOptions: {
+      workers: {
+        wrangler: { configPath: "./wrangler.jsonc" },
+      },
+    },
   },
 });
