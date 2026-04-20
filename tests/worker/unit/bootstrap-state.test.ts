@@ -22,7 +22,7 @@ describe("getBootstrapState", () => {
         passwordHash: "hashed",
         hasRuntimeSecret: false,
       }),
-    ).toBe("secret_pending");
+    ).toBe("uninitialized");
 
     expect(
       getBootstrapState({

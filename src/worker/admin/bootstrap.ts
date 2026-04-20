@@ -21,7 +21,7 @@ export async function handleBootstrap(env: AppEnv): Promise<Response> {
 
 export async function handleSetup(env: AppEnv, request: Request): Promise<Response> {
   const existingHash = await env.APP_KV.get(KV_KEYS.passwordHash);
-  if (existingHash) {
+  if (existingHash && hasRuntimeSecret(env)) {
     return new Response(JSON.stringify({ error: "already initialized" }), {
       status: 409,
       headers: { "content-type": "application/json" },

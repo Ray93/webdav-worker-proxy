@@ -2,9 +2,11 @@
 import { SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import type { AppEnv } from "../../../src/shared/types";
+import { handleBootstrap, handleSetup } from "../../../src/worker/admin/bootstrap";
 import { handleLogin } from "../../../src/worker/admin/auth";
 import { routeRequest } from "../../../src/worker/router";
 import { signSession } from "../../../src/worker/security/session";
+import { KV_KEYS } from "../../../src/worker/store/kv";
 
 describe("admin bootstrap and auth", () => {
   it("follows bootstrap flow when runtime secret is configured", async () => {
@@ -66,5 +68,38 @@ describe("admin bootstrap and auth", () => {
 
     expect(response.status).toBe(401);
     expect(await response.json()).toMatchObject({ error: "unauthorized" });
+  });
+
+  it("returns to uninitialized state and allows setup again when runtime secret is missing", async () => {
+    let storedPasswordHash = "existing-password-hash";
+    const noSecretEnv = {
+      ADMIN_SESSION_SECRET: "  ",
+      APP_KV: {
+        get: async (key: string) =>
+          key === KV_KEYS.passwordHash ? storedPasswordHash : null,
+        put: async (key: string, value: string) => {
+          if (key === KV_KEYS.passwordHash) {
+            storedPasswordHash = value;
+          }
+        },
+      },
+      ASSETS: { fetch: async () => new Response("asset") },
+    } as unknown as AppEnv;
+
+    const bootstrap = await handleBootstrap(noSecretEnv);
+    expect(await bootstrap.json()).toMatchObject({ state: "uninitialized" });
+
+    const setup = await handleSetup(
+      noSecretEnv,
+      new Request("https://example.com/api/admin/setup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ password: "new-secret-pass" }),
+      }),
+    );
+
+    expect(setup.status).toBe(200);
+    expect(await setup.json()).toMatchObject({ secretName: "ADMIN_SESSION_SECRET" });
+    expect(storedPasswordHash).not.toBe("existing-password-hash");
   });
 });

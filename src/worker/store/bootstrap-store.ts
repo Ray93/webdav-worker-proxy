@@ -6,12 +6,8 @@ export interface BootstrapStateInput {
 }
 
 export function getBootstrapState(input: BootstrapStateInput): BootstrapState {
-  if (!input.passwordHash) {
+  if (!input.hasRuntimeSecret || !input.passwordHash) {
     return "uninitialized";
-  }
-
-  if (!input.hasRuntimeSecret) {
-    return "secret_pending";
   }
 
   return "ready";

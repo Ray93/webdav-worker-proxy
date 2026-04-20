@@ -107,7 +107,7 @@ export default function App() {
         setLoading(false);
       }
     })();
-  }, [refreshBootstrapState, syncSession]);
+  }, []);
 
   if (loading || !bootstrap) {
     return <LoadingScreen />;
