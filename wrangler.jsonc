@@ -8,8 +8,7 @@
   },
   "kv_namespaces": [
     {
-      "binding": "APP_KV",
-      "id": "replace-in-cloudflare"
+      "binding": "APP_KV"
     }
   ]
 }
