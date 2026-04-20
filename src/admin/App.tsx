@@ -23,6 +23,8 @@ import { BootstrapPage } from "./features/bootstrap/bootstrap-page";
 import { LoginPage } from "./features/auth/login-page";
 import { RoutesPage } from "./features/routes/routes-page";
 
+type LocalBootstrapState = BootstrapResponse["state"] | "secret_pending";
+
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "请求失败";
 }
@@ -41,6 +43,7 @@ function LoadingScreen() {
 
 export default function App() {
   const [bootstrap, setBootstrap] = useState<BootstrapResponse | null>(null);
+  const [localBootstrapState, setLocalBootstrapState] = useState<LocalBootstrapState | null>(null);
   const [generatedSecret, setGeneratedSecret] = useState<string>();
   const [routes, setRoutes] = useState<ProxyRoute[]>([]);
   const [authenticated, setAuthenticated] = useState(false);
@@ -57,6 +60,7 @@ export default function App() {
     const next = await fetchBootstrap();
     startTransition(() => {
       setBootstrap(next);
+      setLocalBootstrapState(next.state);
       setBootstrapError(undefined);
     });
     return next;
@@ -109,18 +113,18 @@ export default function App() {
     })();
   }, []);
 
-  if (loading || !bootstrap) {
+  if (loading || !bootstrap || !localBootstrapState) {
     return <LoadingScreen />;
   }
 
-  if (bootstrap.state !== "ready") {
+  if (localBootstrapState !== "ready") {
     return (
       <BootstrapPage
         error={bootstrapError}
         generatedSecret={generatedSecret}
         pending={setupPending || refreshPending}
         secretName={bootstrap.secretName}
-        state={bootstrap.state}
+        state={localBootstrapState}
         onRefresh={async () => {
           setRefreshPending(true);
           try {
@@ -143,11 +147,16 @@ export default function App() {
             const result = await setupPassword(password);
             setGeneratedSecret(result.generatedSecret);
             startTransition(() => {
-              setBootstrap({
-                state: "secret_pending",
-                hasRuntimeSecret: false,
-                secretName: result.secretName,
-              });
+              setBootstrap((current) =>
+                current
+                  ? { ...current, secretName: result.secretName }
+                  : {
+                      state: "uninitialized",
+                      hasRuntimeSecret: false,
+                      secretName: result.secretName,
+                    },
+              );
+              setLocalBootstrapState("secret_pending");
             });
           } catch (error) {
             setBootstrapError(getErrorMessage(error));

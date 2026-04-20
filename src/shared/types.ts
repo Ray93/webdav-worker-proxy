@@ -1,4 +1,4 @@
-export type BootstrapState = "uninitialized" | "secret_pending" | "ready";
+export type BootstrapState = "uninitialized" | "ready";
 
 export interface AppEnv {
   APP_KV: KVNamespace;
