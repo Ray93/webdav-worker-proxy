@@ -6,7 +6,8 @@
     "build": "vite build",
     "dev": "vite build --watch",
     "deploy": "wrangler deploy",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.0",

@@ -1,0 +1,11 @@
+{
+  "name": "webdav-worker-proxy-test",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2026-04-16",
+  "kv_namespaces": [
+    {
+      "binding": "APP_KV",
+      "id": "test-kv-id"
+    }
+  ]
+}

@@ -1,3 +1,7 @@
 .worktrees/
 node_modules/
 dist/
+src/**/*.js
+tests/**/*.js
+vite.config.js
+vitest.config.js

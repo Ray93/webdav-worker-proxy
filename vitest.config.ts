@@ -3,9 +3,11 @@ import { defineWorkersConfig } from "@cloudflare/vitest-pool-workers/config";
 export default defineWorkersConfig({
   test: {
     globals: true,
+    include: ["tests/**/*.test.ts"],
+    exclude: ["**/*.js", "**/node_modules/**", "**/dist/**"],
     poolOptions: {
       workers: {
-        wrangler: { configPath: "./wrangler.jsonc" },
+        wrangler: { configPath: "./wrangler.test.jsonc" },
       },
     },
   },
