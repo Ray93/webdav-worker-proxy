@@ -2,6 +2,9 @@
   "name": "webdav-worker-proxy-test",
   "main": "src/worker/index.ts",
   "compatibility_date": "2026-04-16",
+  "vars": {
+    "ADMIN_SESSION_SECRET": "test-admin-session-secret"
+  },
   "kv_namespaces": [
     {
       "binding": "APP_KV",

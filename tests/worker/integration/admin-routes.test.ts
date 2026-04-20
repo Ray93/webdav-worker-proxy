@@ -1,6 +1,5 @@
 import { SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
-import { signSession } from "../../../src/worker/security/session";
 
 describe("admin route api", () => {
   it("creates, updates, toggles, and deletes a route", async () => {
@@ -16,7 +15,7 @@ describe("admin route api", () => {
       body: JSON.stringify({ password: "secret-pass" }),
     });
 
-    const cookie = login.headers.get("set-cookie") ?? `admin_session=${await signSession("")}`;
+    const cookie = login.headers.get("set-cookie")!;
 
     const create = await SELF.fetch("https://example.com/api/admin/routes", {
       method: "POST",
