@@ -44,7 +44,12 @@ function mapUpstreamPathToProxyPath(
     return null;
   }
 
-  if (!route.stripPrefix) return relativePath;
+  if (!route.stripPrefix) {
+    if (!hasRoutePrefix(relativePath, route.prefix)) {
+      return null;
+    }
+    return relativePath;
+  }
 
   if (route.prefix === "/") return relativePath;
   if (relativePath === "/") return route.prefix;

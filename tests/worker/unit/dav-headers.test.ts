@@ -14,6 +14,10 @@ const davRoute = {
   createdAt: "",
   updatedAt: "",
 };
+const davRouteNoStrip = {
+  ...davRoute,
+  stripPrefix: false,
+};
 const proxyOrigin = "https://proxy.example.com";
 
 describe("rewriteDestinationHeader", () => {
@@ -136,5 +140,25 @@ describe("rewriteResponseLocation", () => {
         proxyOrigin,
       }),
     ).toBe("https://proxy.example.com/dav/folder/file.txt?download=1#part");
+  });
+
+  it("rewrites stripPrefix=false locations inside mapped subtree", () => {
+    expect(
+      rewriteResponseLocation({
+        route: davRouteNoStrip,
+        location: "https://dav.example.com/root/dav/file.txt",
+        proxyOrigin,
+      }),
+    ).toBe("https://proxy.example.com/dav/file.txt");
+  });
+
+  it("keeps stripPrefix=false locations outside mapped subtree unchanged", () => {
+    expect(
+      rewriteResponseLocation({
+        route: davRouteNoStrip,
+        location: "https://dav.example.com/root/other",
+        proxyOrigin,
+      }),
+    ).toBe("https://dav.example.com/root/other");
   });
 });
