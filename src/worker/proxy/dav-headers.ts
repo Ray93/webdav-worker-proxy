@@ -63,13 +63,25 @@ function mapUpstreamPathToProxyPath(
 export function rewriteDestinationHeader(
   input: DestinationInput,
 ): DestinationRewriteResult {
-  let destinationUrl: URL;
   let proxyUrl: URL;
   try {
-    destinationUrl = new URL(input.destination);
     proxyUrl = new URL(input.proxyOrigin);
   } catch {
     return { kind: "passthrough", value: input.destination };
+  }
+
+  let destinationUrl: URL;
+  try {
+    destinationUrl = new URL(input.destination);
+  } catch {
+    if (!input.destination.startsWith("/")) {
+      return { kind: "passthrough", value: input.destination };
+    }
+    try {
+      destinationUrl = new URL(input.destination, proxyUrl.origin);
+    } catch {
+      return { kind: "passthrough", value: input.destination };
+    }
   }
 
   if (destinationUrl.origin !== proxyUrl.origin) {

@@ -93,6 +93,18 @@ describe("rewriteDestinationHeader", () => {
       value: "https://dav.example.com/root/folder/file.txt?download=1#part",
     });
   });
+  it("rewrites root-relative destinations and preserves query/hash", () => {
+    expect(
+      rewriteDestinationHeader({
+        route: davRoute,
+        proxyOrigin,
+        destination: "/dav/folder/file.txt?download=1#part",
+      }),
+    ).toEqual({
+      kind: "rewritten",
+      value: "https://dav.example.com/root/folder/file.txt?download=1#part",
+    });
+  });
 });
 
 describe("rewriteResponseLocation", () => {
