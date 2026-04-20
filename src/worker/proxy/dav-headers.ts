@@ -94,7 +94,12 @@ export function rewriteResponseLocation(input: ResponseLocationInput): string {
   try {
     locationUrl = new URL(input.location);
   } catch {
-    return input.location;
+    if (!input.location.startsWith("/")) return input.location;
+    try {
+      locationUrl = new URL(input.location, upstream.origin);
+    } catch {
+      return input.location;
+    }
   }
 
   if (locationUrl.origin !== upstream.origin) return input.location;

@@ -116,7 +116,7 @@ describe("rewriteResponseLocation", () => {
     ).toBe("https://other.example.com/root/folder/file.txt");
   });
 
-  it("returns relative locations unchanged without throwing", () => {
+  it("rewrites root-relative upstream locations when they map to the route subtree", () => {
     expect(() =>
       rewriteResponseLocation({
         route: davRoute,
@@ -131,7 +131,7 @@ describe("rewriteResponseLocation", () => {
         location: "/root/folder/file.txt",
         proxyOrigin: "https://proxy.example.com",
       }),
-    ).toBe("/root/folder/file.txt");
+    ).toBe("https://proxy.example.com/dav/folder/file.txt");
   });
 
   it("handles root prefix without introducing double slashes", () => {
