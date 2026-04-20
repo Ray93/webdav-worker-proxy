@@ -10,6 +10,7 @@ import {
   handleUpdateRoute,
   requireAdmin,
 } from "./admin/routes";
+import { maybeProxyRequest } from "./proxy/forward-request";
 
 export async function routeRequest(request: Request, env: AppEnv): Promise<Response> {
   const url = new URL(request.url);
@@ -34,7 +35,7 @@ export async function routeRequest(request: Request, env: AppEnv): Promise<Respo
     return handleLogout();
   }
 
-  if (url.pathname.startsWith("/api/admin/routes")) {
+  if (url.pathname === "/api/admin/routes" || url.pathname.startsWith("/api/admin/routes/")) {
     const unauthorized = await requireAdmin(request, env);
     if (unauthorized) return unauthorized;
 
@@ -53,6 +54,15 @@ export async function routeRequest(request: Request, env: AppEnv): Promise<Respo
     if (/^\/api\/admin\/routes\/[^/]+$/.test(url.pathname) && request.method === "DELETE") {
       return handleDeleteRoute(env, url.pathname.split("/")[4]);
     }
+  }
+
+  if (url.pathname === "/api/admin" || url.pathname.startsWith("/api/admin/")) {
+    return new Response("Not found", { status: 404 });
+  }
+
+  const proxied = await maybeProxyRequest(request, env);
+  if (proxied) {
+    return proxied;
   }
 
   return new Response("Not found", { status: 404 });
