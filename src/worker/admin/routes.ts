@@ -29,6 +29,10 @@ function routeInputError(error: unknown): Response {
   return errorResponse(400, "invalid route payload");
 }
 
+function isObjectBody(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export async function requireAdmin(request: Request, env: AppEnv): Promise<Response | null> {
   const token = getCookieToken(request);
   const secret = env.ADMIN_SESSION_SECRET?.trim();
@@ -45,12 +49,16 @@ export async function handleListRoutes(env: AppEnv): Promise<Response> {
 }
 
 export async function handleCreateRoute(env: AppEnv, request: Request): Promise<Response> {
-  let input: RouteInput;
+  let parsed: unknown;
   try {
-    input = (await request.json()) as RouteInput;
+    parsed = (await request.json()) as unknown;
   } catch {
     return errorResponse(400, "invalid json");
   }
+  if (!isObjectBody(parsed)) {
+    return errorResponse(400, "invalid route payload");
+  }
+  const input = parsed as unknown as RouteInput;
 
   const existing = await listRoutes(env);
   try {
@@ -94,12 +102,16 @@ export async function handleUpdateRoute(env: AppEnv, routeId: string, request: R
     return errorResponse(404, "route not found");
   }
 
-  let input: RouteInput;
+  let parsed: unknown;
   try {
-    input = (await request.json()) as RouteInput;
+    parsed = (await request.json()) as unknown;
   } catch {
     return errorResponse(400, "invalid json");
   }
+  if (!isObjectBody(parsed)) {
+    return errorResponse(400, "invalid route payload");
+  }
+  const input = parsed as unknown as RouteInput;
 
   try {
     validateRouteInput(input, routes, routeId);

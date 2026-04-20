@@ -37,6 +37,13 @@ describe("admin route api", () => {
     const created = await create.json();
     expect(created.prefix).toBe("/dav");
 
+    const listed = await SELF.fetch("https://example.com/api/admin/routes", {
+      method: "GET",
+      headers: { cookie },
+    });
+    expect(listed.status).toBe(200);
+    expect(await listed.json()).toMatchObject([{ id: created.id, prefix: "/dav" }]);
+
     const updated = await SELF.fetch(`https://example.com/api/admin/routes/${created.id}`, {
       method: "PUT",
       headers: {
@@ -92,6 +99,17 @@ describe("admin route api", () => {
     });
     expect(malformed.status).toBe(400);
 
+    const nonObjectCreate = await SELF.fetch("https://example.com/api/admin/routes", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        cookie,
+      },
+      body: JSON.stringify(123),
+    });
+    expect(nonObjectCreate.status).toBe(400);
+    expect(await nonObjectCreate.json()).toMatchObject({ error: "invalid route payload" });
+
     const created = await SELF.fetch("https://example.com/api/admin/routes", {
       method: "POST",
       headers: {
@@ -123,6 +141,17 @@ describe("admin route api", () => {
       }),
     });
     expect(duplicate.status).toBe(409);
+
+    const nonObjectUpdate = await SELF.fetch(`https://example.com/api/admin/routes/${(await created.json()).id}`, {
+      method: "PUT",
+      headers: {
+        "content-type": "application/json",
+        cookie,
+      },
+      body: JSON.stringify(["bad"]),
+    });
+    expect(nonObjectUpdate.status).toBe(400);
+    expect(await nonObjectUpdate.json()).toMatchObject({ error: "invalid route payload" });
 
     const missingToggle = await SELF.fetch("https://example.com/api/admin/routes/missing-id/toggle", {
       method: "PATCH",
