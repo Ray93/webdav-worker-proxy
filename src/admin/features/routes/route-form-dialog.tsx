@@ -32,7 +32,11 @@ export function RouteFormDialog(props: RouteFormDialogProps) {
     <Dialog.Root open={props.open} onOpenChange={props.onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
-        <Dialog.Content className="dialog-card">
+        <Dialog.Content
+          className="dialog-card"
+          onEscapeKeyDown={(event) => event.preventDefault()}
+          onInteractOutside={(event) => event.preventDefault()}
+        >
           <div className="dialog-header">
             <div>
               <span className="section-tag">路由编辑</span>
