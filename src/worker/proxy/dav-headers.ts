@@ -17,6 +17,12 @@ interface ResponseLocationInput {
   proxyOrigin: string;
 }
 
+interface DavHrefInput {
+  route: ProxyRoute;
+  href: string;
+  proxyOrigin: string;
+}
+
 function hasRoutePrefix(pathname: string, prefix: string): boolean {
   if (prefix === "/") return pathname.startsWith("/");
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
@@ -58,6 +64,11 @@ function mapUpstreamPathToProxyPath(
   if (route.prefix === "/") return relativePath;
   if (relativePath === "/") return route.prefix;
   return `${route.prefix}${relativePath}`;
+}
+
+function mapHrefPath(route: ProxyRoute, hrefPath: string): string | null {
+  const upstream = new URL(route.targetBaseUrl);
+  return mapUpstreamPathToProxyPath(route, upstream.pathname, hrefPath);
 }
 
 export function rewriteDestinationHeader(
@@ -124,4 +135,30 @@ export function rewriteResponseLocation(input: ResponseLocationInput): string {
   if (!rewrittenPath) return input.location;
 
   return `${input.proxyOrigin.replace(/\/$/, "")}${rewrittenPath}${locationUrl.search}${locationUrl.hash}`;
+}
+
+export function rewriteDavResponseHref(input: DavHrefInput): string {
+  let hrefUrl: URL;
+  try {
+    hrefUrl = new URL(input.href);
+  } catch {
+    if (!input.href.startsWith("/")) {
+      return input.href;
+    }
+
+    const rewrittenPath = mapHrefPath(input.route, input.href);
+    return rewrittenPath ?? input.href;
+  }
+
+  const upstream = new URL(input.route.targetBaseUrl);
+  if (hrefUrl.origin !== upstream.origin) {
+    return input.href;
+  }
+
+  const rewrittenPath = mapHrefPath(input.route, hrefUrl.pathname);
+  if (!rewrittenPath) {
+    return input.href;
+  }
+
+  return `${input.proxyOrigin.replace(/\/$/, "")}${rewrittenPath}${hrefUrl.search}${hrefUrl.hash}`;
 }

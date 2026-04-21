@@ -99,4 +99,34 @@ describe("proxy runtime", () => {
       "https://proxy.example.com/dav/other.txt?draft=1#frag",
     );
   });
+
+  it("rewrites DAV multistatus href values in PROPFIND responses", async () => {
+    const xml = [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      '<D:multistatus xmlns:D="DAV:">',
+      "<D:response><D:href>/root/folder</D:href></D:response>",
+      "<D:response><D:href>/root/folder/file.txt</D:href></D:response>",
+      "</D:multistatus>",
+    ].join("");
+
+    const upstreamFetch = vi.fn(async () => {
+      return new Response(xml, {
+        status: 207,
+        headers: {
+          "content-type": 'application/xml; charset="utf-8"',
+        },
+      });
+    });
+    vi.stubGlobal("fetch", upstreamFetch);
+
+    const response = await routeRequest(
+      new Request("https://proxy.example.com/dav/folder", {
+        method: "PROPFIND",
+      }),
+      createEnv([route]),
+    );
+
+    expect(response.status).toBe(207);
+    await expect(response.text()).resolves.toContain("<D:href>/dav/folder/file.txt</D:href>");
+  });
 });

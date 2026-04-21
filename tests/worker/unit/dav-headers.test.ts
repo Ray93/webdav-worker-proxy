@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   rewriteDestinationHeader,
+  rewriteDavResponseHref,
   rewriteResponseLocation,
 } from "../../../src/worker/proxy/dav-headers";
 
@@ -187,5 +188,49 @@ describe("rewriteResponseLocation", () => {
         proxyOrigin,
       }),
     ).toBe("https://dav.example.com/root/other");
+  });
+});
+
+describe("rewriteDavResponseHref", () => {
+  it("rewrites root-relative upstream href values to proxy-relative paths", () => {
+    expect(
+      rewriteDavResponseHref({
+        route: {
+          ...davRoute,
+          prefix: "/",
+          targetBaseUrl: "https://dav.example.com/dav",
+        },
+        href: "/dav/Koofr/nodewarden/file.zip",
+        proxyOrigin,
+      }),
+    ).toBe("/Koofr/nodewarden/file.zip");
+  });
+
+  it("rewrites absolute upstream href values to proxy absolute URLs", () => {
+    expect(
+      rewriteDavResponseHref({
+        route: {
+          ...davRoute,
+          prefix: "/",
+          targetBaseUrl: "https://dav.example.com/dav",
+        },
+        href: "https://dav.example.com/dav/Koofr/nodewarden/file.zip",
+        proxyOrigin,
+      }),
+    ).toBe("https://proxy.example.com/Koofr/nodewarden/file.zip");
+  });
+
+  it("keeps non-matching href values unchanged", () => {
+    expect(
+      rewriteDavResponseHref({
+        route: {
+          ...davRoute,
+          prefix: "/",
+          targetBaseUrl: "https://dav.example.com/dav",
+        },
+        href: "/other/file.zip",
+        proxyOrigin,
+      }),
+    ).toBe("/other/file.zip");
   });
 });
