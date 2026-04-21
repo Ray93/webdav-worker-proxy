@@ -1,4 +1,5 @@
 const SALT_BYTES = 16;
+const PBKDF2_ITERATIONS = 100_000;
 
 function toHex(bytes: Uint8Array<ArrayBuffer>): string {
   return [...bytes]
@@ -35,7 +36,7 @@ async function deriveBits(
     {
       name: "PBKDF2",
       hash: "SHA-256",
-      iterations: 120_000,
+      iterations: PBKDF2_ITERATIONS,
       salt,
     },
     baseKey,

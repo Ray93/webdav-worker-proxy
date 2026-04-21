@@ -1,8 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   hashPassword,
   verifyPassword,
 } from "../../../src/worker/security/password.ts";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("password helpers", () => {
   it("hashes the same password differently each time", async () => {
@@ -33,5 +37,18 @@ describe("password helpers", () => {
     await expect(
       verifyPassword("correct horse battery staple", "not-a-valid-hash"),
     ).resolves.toBe(false);
+  });
+
+  it("keeps PBKDF2 iterations within Cloudflare Workers limits", async () => {
+    const deriveBitsSpy = vi.spyOn(crypto.subtle, "deriveBits");
+
+    await hashPassword("correct horse battery staple");
+
+    const [algorithm] = deriveBitsSpy.mock.calls[0] ?? [];
+    expect(algorithm).toMatchObject({
+      name: "PBKDF2",
+      hash: "SHA-256",
+      iterations: 100_000,
+    });
   });
 });
