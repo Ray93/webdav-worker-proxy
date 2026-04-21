@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface BootstrapPageProps {
   state: "uninitialized" | "confirm_secret";
@@ -12,8 +12,48 @@ interface BootstrapPageProps {
 
 export function BootstrapPage(props: BootstrapPageProps) {
   const [password, setPassword] = useState("");
+  const [copiedState, setCopiedState] = useState({
+    secretName: false,
+    secretValue: false,
+  });
+  const resetTimers = useRef<{
+    secretName?: number;
+    secretValue?: number;
+  }>({});
 
   const secretReady = Boolean(props.generatedSecret);
+
+  useEffect(() => {
+    return () => {
+      Object.values(resetTimers.current).forEach((timer) => {
+        if (timer !== undefined) {
+          window.clearTimeout(timer);
+        }
+      });
+    };
+  }, []);
+
+  async function handleCopy(field: "secretName" | "secretValue", value: string) {
+    if (!navigator.clipboard?.writeText) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedState((current) => ({ ...current, [field]: true }));
+
+      const currentTimer = resetTimers.current[field];
+      if (currentTimer !== undefined) {
+        window.clearTimeout(currentTimer);
+      }
+
+      resetTimers.current[field] = window.setTimeout(() => {
+        setCopiedState((current) => ({ ...current, [field]: false }));
+      }, 2000);
+    } catch {
+      // Ignore clipboard failures and keep the current button label.
+    }
+  }
 
   return (
     <main className="page-shell">
@@ -93,13 +133,31 @@ export function BootstrapPage(props: BootstrapPageProps) {
               </div>
 
               <div className="secret-card">
-                <span className="secret-caption">密钥名称</span>
+                <div className="secret-card-head">
+                  <span className="secret-caption">密钥名称</span>
+                  <button
+                    className="ghost-button secret-copy-button"
+                    onClick={() => void handleCopy("secretName", props.secretName)}
+                    type="button"
+                  >
+                    {copiedState.secretName ? "已复制" : "复制"}
+                  </button>
+                </div>
                 <code>{props.secretName}</code>
               </div>
 
               {secretReady ? (
                 <div className="secret-card secret-card-strong">
-                  <span className="secret-caption">本次生成的密钥值</span>
+                  <div className="secret-card-head">
+                    <span className="secret-caption">本次生成的密钥值</span>
+                    <button
+                      className="ghost-button secret-copy-button"
+                      onClick={() => void handleCopy("secretValue", props.generatedSecret ?? "")}
+                      type="button"
+                    >
+                      {copiedState.secretValue ? "已复制" : "复制"}
+                    </button>
+                  </div>
                   <code className="secret-value">{props.generatedSecret}</code>
                 </div>
               ) : (
